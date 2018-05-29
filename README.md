@@ -1,16 +1,18 @@
 # Giant Bomb API
 
-An unofficial ruby wrapper for the [Giantbomb API](http://api.giantbomb.com). An API that provides structured data about videogames. You should inform yourself about the endpoints at http://www.giantbomb.com/api/documentation .
+An unofficial ruby wrapper for the [Giantbomb API](https://www.giantbomb.com/api/). An API that provides structured data about videogames. You should inform yourself about the endpoints at http://www.giantbomb.com/api/documentation .
 
 This gem aims to provide access to most endpoints on the API. You'll be able to **search**, **filter** and page throught most of them. See further below on what is supported. 
 
 **Contributors are welcome**. Please contact [@toadle](https://github.com/toadle).
 
+[![Gem Version](https://badge.fury.io/rb/giant_bomb_api.svg)](http://badge.fury.io/rb/giant_bomb_api)
 [![Code Climate](https://codeclimate.com/github/toadle/giant_bomb_api/badges/gpa.svg)](https://codeclimate.com/github/toadle/giant_bomb_api)
 [![Test Coverage](https://codeclimate.com/github/toadle/giant_bomb_api/badges/coverage.svg)](https://codeclimate.com/github/toadle/giant_bomb_api/coverage)
-[![Circle CI](https://circleci.com/gh/toadle/giant_bomb_api/tree/dev.svg?style=svg)](https://circleci.com/gh/toadle/giant_bomb_api/tree/dev)
+[![Travis CI](https://travis-ci.org/toadle/giant_bomb_api.svg?branch=dev)](https://travis-ci.org/toadle/giant_bomb_api)
 
 ## Changelog
+* **2017-06-30**: `each_page`-iterator instead of `all`, which supports rate-limiting. Thanks to @naiyt
 * **2015-09-19**: Initial release as 0.5.1
 
 # Installation
@@ -24,7 +26,7 @@ gem install giant_bomb_api
 or in your `Gemfile`
 
 ```
-gem giant_bomb_api
+gem 'giant_bomb_api'
 ```
 
 # How to use
@@ -116,16 +118,29 @@ You can also directly query a resource that has a collection-endpoint.
 
 This is available for all resources that the [Giantbomb API](http://www.giantbomb.com/api/documentation) offers a 'collection' for. e.g. `game` and `games`or `character` and `characters`.
 
-e.g. all:
+Use the `each_page` method to iterate through each page of a collection. `each_page` will accept a block and pass it the current page of results.
 
-```
-GiantBombApi::Resource::Game.all
+```ruby
+GiantBombApi::Resource::Game.each_page do |page|
+  names = page.results.map(&:name)
+  puts names
+end
 ```
 
-this call supports optional sorting, e.g.:
+`each_page` accepts the following optional keyword arguments:
 
-```
-GiantBombApi::Resource::Game.all(sort: { name: :desc })
+- `sort`: a sort option for the results
+- `limit`: the number of results to return per page. Defaults to 100 (the max allowed through the Giant Bomb API)
+- `offset`: defaults to 0
+- `should_rate_limit`: pass this in as true if you want to ensure that you are rate limiting your requests to under the required 200 per resource per hour (which is important if you're trying to iterate through every page of a resource)
+- `rate_per_hour`: defaults to 200 (the standard Giant Bomb hourly request limit). Override this value if you want to send more requests per hour (not recommended) or less.
+
+Example using the optional arguments:
+
+```ruby
+GiantBombApi::Resource::Game.each_page(sort: { name: :desc }, limit: 50, should_rate_limit: true) do |page|
+  # do something with the page
+end
 ```
 
 if you want to get more detailed your can do: 

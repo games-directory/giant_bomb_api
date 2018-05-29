@@ -12,7 +12,7 @@ module GiantBombApi
     end
 
     def end_point
-      '/search'
+      GiantBombApi::Client::API_URL + 'search'
     end
   end
 end
